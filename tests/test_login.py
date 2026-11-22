@@ -1,38 +1,34 @@
 from playwright.sync_api import Page, expect
-import pytest
-import uuid
+from faker import Faker
 
-random_username = [
-    uuid.uuid4().hex[:8]
-    for _ in range(3)
-]
-random_password = [
-    uuid.uuid4().hex[:8]
-    for _ in range(3)
-]
-@pytest.mark.parametrize("username, password", [
-    (random_username[0], random_password[0]),
-    (random_username[1], random_password[1]),
-    (random_username[2], random_password[2]),
-])
 
-def test_invalid_login_and_error(page: Page, username: str, password: str, web_url: str):
 
+def test_invalid_login_and_error(page: Page, web_url: str):
+    fake = Faker()
     page.goto(f"{web_url}/")
 
-    page.get_by_role("link", name="Login").click()
+    page.get_by_test_id("nav-login").click()
     expect(page).to_have_url(f"{web_url}/login")
 
+    expect(page.get_by_test_id("login-title")).to_have_text("Authorization")
 
-    page.get_by_test_id("login-username").fill(username)
-    page.get_by_test_id("login-password").fill(password)
+
+    page.get_by_test_id("login-username").fill(fake.user_name())
+    page.get_by_test_id("login-password").fill(fake.password())
     page.get_by_test_id("login-submit").click()
 
     spinner = page.get_by_test_id("login-submit-spinner")
     expect(spinner).to_be_visible()
-    expect(spinner).to_be_hidden(timeout=15000)
+    expect(spinner).to_be_hidden()
 
 
     error_text = page.get_by_test_id("login-error-inline")
     expect(error_text).to_be_visible()
-    expect(error_text).to_have_text("Invalid login or password.")
+    expect(error_text).not_to_be_empty()
+    actual_error_text = error_text.inner_text()
+    expected_error_text = "Invalid login or password."
+
+    assert actual_error_text == expected_error_text, (
+        f"Expected: '{expected_error_text}', "
+        f"Actual: '{actual_error_text}'"
+    )
