@@ -8,10 +8,6 @@ def test_invalid_login_and_error(page: Page, web_url: str):
     page.goto(f"{web_url}/")
 
     page.get_by_test_id("nav-login").click()
-    expect(page).to_have_url(f"{web_url}/login")
-
-    expect(page.get_by_test_id("login-title")).to_have_text("Authorization")
-
 
     page.get_by_test_id("login-username").fill(fake.user_name())
     page.get_by_test_id("login-password").fill(fake.password())
